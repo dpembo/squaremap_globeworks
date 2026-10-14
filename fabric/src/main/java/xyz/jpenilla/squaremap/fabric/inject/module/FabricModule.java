@@ -1,0 +1,55 @@
+package xyz.jpenilla.squaremap.fabric.inject.module;
+
+import com.google.inject.AbstractModule;
+import com.google.inject.Provides;
+import java.nio.file.Path;
+import net.fabricmc.loader.api.FabricLoader;
+import net.fabricmc.loader.api.ModContainer;
+import net.kyori.adventure.platform.modcommon.MinecraftServerAudiences;
+import net.kyori.adventure.text.flattener.ComponentFlattener;
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.framework.qual.DefaultQualifier;
+import xyz.jpenilla.squaremap.common.command.PlatformCommands;
+import xyz.jpenilla.squaremap.common.inject.annotation.DataDirectory;
+import xyz.jpenilla.squaremap.common.player.AbstractPlayerManager;
+import xyz.jpenilla.squaremap.common.server.ServerAccess;
+import xyz.jpenilla.squaremap.fabric.SquaremapFabric;
+import xyz.jpenilla.squaremap.fabric.command.FabricCommands;
+import xyz.jpenilla.squaremap.fabric.player.FabricPlayerManager;
+import xyz.jpenilla.squaremap.fabric.server.FabricServerAccess;
+
+@DefaultQualifier(NonNull.class)
+public final class FabricModule extends AbstractModule {
+    private final SquaremapFabric squaremapFabric;
+
+    public FabricModule(final SquaremapFabric squaremapFabric) {
+        this.squaremapFabric = squaremapFabric;
+    }
+
+    @Override
+    protected void configure() {
+        this.bind(SquaremapFabric.class)
+            .toInstance(this.squaremapFabric);
+
+        this.bind(PlatformCommands.class)
+            .to(FabricCommands.class);
+
+        this.bind(ServerAccess.class)
+            .to(FabricServerAccess.class);
+
+        this.bind(Path.class)
+            .annotatedWith(DataDirectory.class)
+            .toInstance(FabricLoader.getInstance().getGameDir().resolve("squaremap"));
+
+        this.bind(AbstractPlayerManager.class)
+            .to(FabricPlayerManager.class);
+
+        this.bind(ModContainer.class)
+            .toInstance(FabricLoader.getInstance().getModContainer("squaremap").orElseThrow());
+    }
+
+    @Provides
+    public ComponentFlattener componentFlattener(final FabricServerAccess serverAccess) {
+        return MinecraftServerAudiences.of(serverAccess.requireServer()).flattener();
+    }
+}

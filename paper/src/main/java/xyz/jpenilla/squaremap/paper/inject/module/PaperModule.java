@@ -1,0 +1,61 @@
+package xyz.jpenilla.squaremap.paper.inject.module;
+
+import com.google.inject.AbstractModule;
+import io.papermc.paper.text.PaperComponents;
+import java.nio.file.Path;
+import net.kyori.adventure.text.flattener.ComponentFlattener;
+import org.bukkit.Server;
+import org.bukkit.plugin.java.JavaPlugin;
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.framework.qual.DefaultQualifier;
+import xyz.jpenilla.squaremap.common.chunksnapshot.ChunkSnapshotProviderFactory;
+import xyz.jpenilla.squaremap.common.command.PlatformCommands;
+import xyz.jpenilla.squaremap.common.inject.annotation.DataDirectory;
+import xyz.jpenilla.squaremap.common.player.AbstractPlayerManager;
+import xyz.jpenilla.squaremap.common.render.RegionFileDirectoryResolver;
+import xyz.jpenilla.squaremap.common.server.ServerAccess;
+import xyz.jpenilla.squaremap.paper.chunksnapshot.PaperChunkSnapshotProviderFactory;
+import xyz.jpenilla.squaremap.paper.command.PaperCommands;
+import xyz.jpenilla.squaremap.paper.player.PaperPlayerManager;
+import xyz.jpenilla.squaremap.paper.render.PaperRegionFileDirectoryResolver;
+import xyz.jpenilla.squaremap.paper.server.PaperServerAccess;
+
+@DefaultQualifier(NonNull.class)
+public final class PaperModule extends AbstractModule {
+    private final JavaPlugin plugin;
+
+    public PaperModule(final JavaPlugin plugin) {
+        this.plugin = plugin;
+    }
+
+    @Override
+    protected void configure() {
+        this.bind(JavaPlugin.class)
+            .toInstance(this.plugin);
+
+        this.bind(Server.class)
+            .toInstance(this.plugin.getServer());
+
+        this.bind(ServerAccess.class)
+            .to(PaperServerAccess.class);
+
+        this.bind(Path.class)
+            .annotatedWith(DataDirectory.class)
+            .toInstance(this.plugin.getDataFolder().toPath());
+
+        this.bind(RegionFileDirectoryResolver.class)
+            .to(PaperRegionFileDirectoryResolver.class);
+
+        this.bind(PlatformCommands.class)
+            .to(PaperCommands.class);
+
+        this.bind(ChunkSnapshotProviderFactory.class)
+            .to(PaperChunkSnapshotProviderFactory.class);
+
+        this.bind(AbstractPlayerManager.class)
+            .to(PaperPlayerManager.class);
+
+        this.bind(ComponentFlattener.class)
+            .toInstance(PaperComponents.flattener());
+    }
+}

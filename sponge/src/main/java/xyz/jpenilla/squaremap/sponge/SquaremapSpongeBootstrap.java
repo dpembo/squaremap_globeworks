@@ -1,0 +1,50 @@
+package xyz.jpenilla.squaremap.sponge;
+
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import javax.inject.Inject;
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.framework.qual.DefaultQualifier;
+import org.spongepowered.api.data.DataRegistration;
+import org.spongepowered.api.entity.living.player.server.ServerPlayer;
+import org.spongepowered.api.event.Listener;
+import org.spongepowered.api.event.lifecycle.RegisterDataEvent;
+import org.spongepowered.plugin.builtin.jvm.Plugin;
+import xyz.jpenilla.squaremap.common.inject.SquaremapModulesBuilder;
+import xyz.jpenilla.squaremap.sponge.inject.module.SpongeModule;
+import xyz.jpenilla.squaremap.sponge.player.SpongePlayerManager;
+import xyz.jpenilla.squaremap.sponge.world.SpongeMapWorld;
+
+// Sponge uses Guice 5.x which supports javax.inject.Inject;
+// We use Guice 7.x and as such relocate it's @Inject and can't use it here without complicating the build.
+@SuppressWarnings("SpongePluginClass")
+@DefaultQualifier(NonNull.class)
+@Plugin("squaremap")
+public final class SquaremapSpongeBootstrap {
+    public static SquaremapSpongeBootstrap instance;
+
+    private final SpongeModule spongeModule;
+
+    @Inject
+    public SquaremapSpongeBootstrap(final SpongeModule spongeModule) {
+        instance = this;
+        this.spongeModule = spongeModule;
+    }
+
+    public void init() {
+        final Injector injector = Guice.createInjector(
+            SquaremapModulesBuilder.forPlatform(SquaremapSponge.class)
+                .mapWorld(SpongeMapWorld.class)
+                .withModule(this.spongeModule)
+                .vanillaChunkSnapshotProviderFactory()
+                .vanillaRegionFileDirectoryResolver()
+                .build()
+        );
+        injector.getInstance(SquaremapSponge.class).init();
+    }
+
+    @Listener
+    public void registerData(final RegisterDataEvent event) {
+        event.register(DataRegistration.of(SpongePlayerManager.HIDDEN_KEY, ServerPlayer.class));
+    }
+}

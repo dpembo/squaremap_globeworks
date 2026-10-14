@@ -1,0 +1,20 @@
+{
+  "required": true,
+  "minVersion": "0.8.4",
+  "package": "xyz.jpenilla.squaremap.fabric.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "mixins": [
+    "BlockItemMixin",
+    "ChunkMapAccess",
+    "CommandSourceStackAccess",
+    "SleepBlockingMinecraftServerMixin",
+    "ServerPlayerMixin"
+  ],
+  "client": [
+    "LiquidBlockAccess",
+    "SpriteContentsMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

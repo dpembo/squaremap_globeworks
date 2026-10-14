@@ -1,0 +1,74 @@
+package xyz.jpenilla.squaremap.common.visibilitylimit;
+
+import net.minecraft.core.BlockPos;
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.framework.qual.DefaultQualifier;
+import xyz.jpenilla.squaremap.api.MapWorld;
+import xyz.jpenilla.squaremap.common.coordinate.CoordinateConversions;
+
+/**
+ * Limits map drawing to a rectangular region.
+ */
+@DefaultQualifier(NonNull.class)
+final class RectangleShape implements VisibilityShape {
+    private final int minBlockX;
+    private final int maxBlockX;
+    private final int minBlockZ;
+    private final int maxBlockZ;
+
+    private final int minChunkX;
+    private final int maxChunkX;
+    private final int minChunkZ;
+    private final int maxChunkZ;
+
+    private final int minRegionX;
+    private final int maxRegionX;
+    private final int minRegionZ;
+    private final int maxRegionZ;
+
+    /**
+     * Sets the minimum and maximum locations displayed on the map.
+     *
+     * @param min Minimum location, inclusive.
+     * @param max Maximum location, also inclusive.
+     * @throws IllegalArgumentException If min > max.
+     */
+    RectangleShape(final BlockPos min, final BlockPos max) throws IllegalArgumentException {
+        if (min.getX() > max.getX() || min.getZ() > max.getZ()) {
+            throw new IllegalArgumentException("min > max: min=" + min + " max=" + max);
+        }
+
+        this.minBlockX = min.getX();
+        this.maxBlockX = max.getX();
+        this.minBlockZ = min.getZ();
+        this.maxBlockZ = max.getZ();
+
+        this.minChunkX = CoordinateConversions.blockToChunk(this.minBlockX);
+        this.maxChunkX = CoordinateConversions.blockToChunk(this.maxBlockX);
+        this.minChunkZ = CoordinateConversions.blockToChunk(this.minBlockZ);
+        this.maxChunkZ = CoordinateConversions.blockToChunk(this.maxBlockZ);
+
+        this.minRegionX = CoordinateConversions.blockToRegion(this.minBlockX);
+        this.maxRegionX = CoordinateConversions.blockToRegion(this.maxBlockX);
+        this.minRegionZ = CoordinateConversions.blockToRegion(this.minBlockZ);
+        this.maxRegionZ = CoordinateConversions.blockToRegion(this.maxBlockZ);
+    }
+
+    @Override
+    public boolean shouldRenderChunk(final MapWorld world, final int chunkX, final int chunkZ) {
+        return chunkX >= this.minChunkX && chunkX <= this.maxChunkX
+            && chunkZ >= this.minChunkZ && chunkZ <= this.maxChunkZ;
+    }
+
+    @Override
+    public boolean shouldRenderRegion(final MapWorld world, final int regionX, final int regionZ) {
+        return regionX >= this.minRegionX && regionX <= this.maxRegionX
+            && regionZ >= this.minRegionZ && regionZ <= this.maxRegionZ;
+    }
+
+    @Override
+    public boolean shouldRenderColumn(final MapWorld world, final int blockX, final int blockZ) {
+        return blockX >= this.minBlockX && blockX <= this.maxBlockX
+            && blockZ >= this.minBlockZ && blockZ <= this.maxBlockZ;
+    }
+}

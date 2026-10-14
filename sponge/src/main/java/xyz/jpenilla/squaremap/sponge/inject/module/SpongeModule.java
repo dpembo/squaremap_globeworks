@@ -1,0 +1,66 @@
+package xyz.jpenilla.squaremap.sponge.inject.module;
+
+import com.google.inject.AbstractModule;
+import com.google.inject.Provides;
+import java.nio.file.Path;
+import javax.inject.Inject;
+import net.kyori.adventure.text.flattener.ComponentFlattener;
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.framework.qual.DefaultQualifier;
+import org.spongepowered.api.Game;
+import org.spongepowered.api.adventure.SpongeComponents;
+import org.spongepowered.api.config.ConfigDir;
+import org.spongepowered.plugin.PluginContainer;
+import xyz.jpenilla.squaremap.common.command.PlatformCommands;
+import xyz.jpenilla.squaremap.common.inject.annotation.DataDirectory;
+import xyz.jpenilla.squaremap.common.player.AbstractPlayerManager;
+import xyz.jpenilla.squaremap.common.server.ServerAccess;
+import xyz.jpenilla.squaremap.sponge.command.SpongeCommands;
+import xyz.jpenilla.squaremap.sponge.player.SpongePlayerManager;
+import xyz.jpenilla.squaremap.sponge.server.SpongeServerAccess;
+
+@DefaultQualifier(NonNull.class)
+public final class SpongeModule extends AbstractModule {
+    private final Path dataDirectory;
+    private final PluginContainer pluginContainer;
+    private final Game game;
+
+    // See comment in SquaremapSpongeBootstrap for why we use javax.inject here
+    @Inject
+    private SpongeModule(
+        @ConfigDir(sharedRoot = false) final Path dataDirectory,
+        final PluginContainer pluginContainer,
+        final Game game
+    ) {
+        this.dataDirectory = dataDirectory;
+        this.pluginContainer = pluginContainer;
+        this.game = game;
+    }
+
+    @Override
+    protected void configure() {
+        this.bind(Path.class)
+            .annotatedWith(DataDirectory.class)
+            .toInstance(this.dataDirectory);
+
+        this.bind(ServerAccess.class)
+            .to(SpongeServerAccess.class);
+
+        this.bind(PlatformCommands.class)
+            .to(SpongeCommands.class);
+
+        this.bind(AbstractPlayerManager.class)
+            .to(SpongePlayerManager.class);
+
+        this.bind(PluginContainer.class)
+            .toInstance(this.pluginContainer);
+
+        this.bind(Game.class)
+            .toInstance(this.game);
+    }
+
+    @Provides
+    public ComponentFlattener componentFlattener() {
+        return SpongeComponents.flattener();
+    }
+}
